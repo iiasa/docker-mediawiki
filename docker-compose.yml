@@ -1,0 +1,38 @@
+# MediaWiki with MariaDB and SimpleSAML
+#
+# Access via "http://localhost:9000”
+#   (or "http://$(docker-machine ip):9000” if using docker-machine)
+version: '3'
+services:
+  mediawiki:
+    image: mediawiki_ssp:1.35.1
+    restart: always
+    ports:
+      - 9000:80
+    links:
+      - database
+    environment:
+      WIKI_PATH: '/wiki'
+      SIMPLESAML_PATH: '/simplesaml/'
+      BASE_URL: 'http://localhost:9000'
+      MEDIAWIKI_DATABASE_HOST: 'database'
+      MEDIAWIKI_DATABASE_USER: 'wikiuser'
+      MEDIAWIKI_DATABASE_PASSWORD: 'example'
+      MEDIAWIKI_DATABASE_NAME: 'my_wiki'
+      MEDIAWIKI_DATABASE_PREFIX: ‘wiki_’
+      # WARNING: Test SK
+      MEDIAWIKI_SECRET_KEY: '56b6e5841743ff7524f894318c31e0466df9c9027ac52b69f3a7781acff2787e'
+    volumes:
+      - ./images:/var/www/html/wiki/images/
+      - ./cert:/var/simplesamlphp/cert/
+  database:
+    image: mariadb
+    restart: always
+    environment:
+      # @see https://phabricator.wikimedia.org/source/mediawiki/browse/master/includes/DefaultSettings.php
+      MYSQL_DATABASE: my_wiki
+      MYSQL_USER: wikiuser
+      MYSQL_PASSWORD: example
+      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+    volumes:
+      - ./mydatadb:/var/lib/mysql
