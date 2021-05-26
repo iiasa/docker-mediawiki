@@ -14,7 +14,7 @@ $config = array(
         'sign.logout' => true,
         'signature.algorithm' => 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256',
         // The entity ID of this SP.
-        'entityID' => 'http://iiasa.ac.at/local-entities', // 'entityID' => 'https://wiki.ece.iiasa.ac.at/',
+        'entityID' => 'https://wiki.ece.iiasa.ac.at/',
         // The entity ID of the IdP this should SP should contact.
         // Can be NULL/unset, in which case the user will be shown a list of available IdPs.
         'idp' => 'https://idp.iiasa.ac.at/idp/shibboleth',
