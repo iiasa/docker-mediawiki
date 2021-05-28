@@ -11,6 +11,10 @@
 # https://www.mediawiki.org/wiki/Manual:Configuration_settings
 
 # Protect against web entry
+if (getenv('DEBUG') == 'true') {
+	error_reporting(-1);
+	ini_set('display_errors', 1);
+}
 if (!defined('MEDIAWIKI')) {
 	exit;
 }
@@ -72,11 +76,22 @@ $wgSharedTables[] = "actor";
 $wgMainCacheType = CACHE_NONE;
 $wgMemCachedServers = [];
 
+$wgAllowExternalImages = true;
+$wgAllowImageTag = true;
+
 ## To enable image uploads, make sure the 'images' directory
 ## is writable, then set this to true:
+$wgUploadDirectory = "/var/www/html/wiki/images";
 $wgEnableUploads = true;
 $wgUseImageMagick = true;
 $wgImageMagickConvertCommand = "/usr/bin/convert";
+
+$wgDebugToolbar = getenv("DEBUG") == 'true';
+
+$wgDebugLogFile = null;
+if (getenv("DEBUG") == 'true') {
+	$wgDebugLogFile = "/var/log/mediawiki/debug-{$wgDBname}.log";
+}
 
 # InstantCommons allows wiki to use images from https://commons.wikimedia.org
 $wgUseInstantCommons = false;
@@ -124,12 +139,13 @@ $wgDiff3 = "/usr/bin/diff3";
 
 # The following permissions were set based on your choice in the installer
 $wgGroupPermissions['*']['createaccount'] = false;
+$wgGroupPermissions['*']['autocreateaccount'] = true;
 $wgGroupPermissions['*']['edit'] = false;
 $wgGroupPermissions['*']['read'] = false;
 
 ## Default skin: you can change the default skin. Use the internal symbolic
 ## names, ie 'vector', 'monobook':
-$wgDefaultSkin = "vector";
+$wgDefaultSkin = "timeless";
 
 # Enabled skins.
 # The following skins were automatically enabled:
@@ -137,6 +153,8 @@ wfLoadSkin('MonoBook');
 wfLoadSkin('Timeless');
 wfLoadSkin('Vector');
 
+$wgTimelessBackdropImage = 'iiasa_logo_white.svg';
+$wgUseSiteCss = true;
 
 # Enabled extensions. Most of the extensions are enabled by adding
 # wfLoadExtension( 'ExtensionName' );
@@ -161,20 +179,37 @@ wfLoadExtension('Poem');
 wfLoadExtension('Renameuser');
 wfLoadExtension('ReplaceText');
 wfLoadExtension('Scribunto');
-wfLoadExtension('SimpleSAMLphp');
 wfLoadExtension('SyntaxHighlight_GeSHi');
 wfLoadExtension('TemplateData');
 wfLoadExtension('VisualEditor');
 wfLoadExtension('WikiEditor');
+wfLoadExtension('Loops');
+wfLoadExtension('Variables');
 
-
+wfLoadExtension('OpenIDConnect');
 # End of automatically generated settings.
 # Add more configuration options below.
 
-$wgSimpleSAMLphp_InstallDir = '/var/simplesamlphp/';
-$wgSimpleSAMLphp_AuthSourceId = 'eduid';
+# wfLoadExtension('SimpleSAMLphp');
+$wgPluggableAuth_EnableLocalLogin = true;
+$wgPluggableAuth_ButtonLabel = 'Log in with your IIASA account';
 
-$wgSimpleSAMLphp_RealNameAttribute = "displayName";
-$wgSimpleSAMLphp_EmailAttribute = "mail";
-$wgSimpleSAMLphp_UsernameAttribute = "sn";
-$wgShowExceptionDetails = true;
+$tenantID = getenv("OPENID_TENANT_ID");
+$clientID = getenv("OPENID_CLIENT_ID");
+$clientSecret = getenv("OPENID_CLIENT_SECRET");
+
+$wgOpenIDConnect_Config["https://login.microsoftonline.com/{$tenantID}/v2.0/"] = [
+	'clientID' => $clientID,
+	'clientsecret' => $clientSecret,
+	'scope' => ['openid', 'email', 'profile']
+];
+$wgOpenIDConnect_UseRealNameAsUserName = true;
+
+# $wgSimpleSAMLphp_InstallDir = '/var/simplesamlphp/';
+# $wgSimpleSAMLphp_AuthSourceId = 'wiki-sp';
+
+# $wgSimpleSAMLphp_RealNameAttribute = "displayName";
+# $wgSimpleSAMLphp_EmailAttribute = "mail";
+# $wgSimpleSAMLphp_UsernameAttribute = "sn";
+$wgShowExceptionDetails = getenv("DEBUG") == 'true';
+$wgMemoryLimit = "100M";

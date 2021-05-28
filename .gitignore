@@ -31,8 +31,8 @@ coverage
 *.zip
 *.vscode
 
-**/**/mydatadb*
-**/**/images
+/mydatadb*
+/images
 **/**/debug
 
-/cert/
+/cert

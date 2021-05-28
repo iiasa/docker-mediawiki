@@ -7,7 +7,7 @@ $config = array(
         // any authentication source.
         'core:AdminPassword',
     ),
-    'eduid' => array(
+    'wiki-sp' => array(
         'saml:SP',
         'privatekey' => 'saml.key',
         'certificate' => 'saml.crt',
@@ -18,6 +18,7 @@ $config = array(
         // The entity ID of the IdP this should SP should contact.
         // Can be NULL/unset, in which case the user will be shown a list of available IdPs.
         'idp' => 'https://idp.iiasa.ac.at/idp/shibboleth',
+        'RelayState' => 'https://wiki.ece.iiasa.ac.at/wiki/index.php/Special:PluggableAuthLogin',
         // The URL to the discovery service.
         // Can be NULL/unset, in which case a builtin discovery service will be used.
         // Or pick one from https://wiki.univie.ac.at/display/federation/Discovery+Services

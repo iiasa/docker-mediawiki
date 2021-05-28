@@ -33,8 +33,8 @@ $config = [
      * The 'application' configuration array groups a set configuration options
      * relative to an application protected by SimpleSAMLphp.
      */
-    //'application' => [
-    /*
+    'application' => [
+        /*
          * The 'baseURL' configuration option allows you to specify a protocol,
          * host and optionally a port that serves as the canonical base for all
          * your application's URLs. This is useful when the environment
@@ -48,8 +48,8 @@ $config = [
          * need to compute the right URLs yourself and pass them dynamically
          * to SimpleSAMLphp's API.
          */
-    //'baseURL' => 'https://example.com',
-    //],
+        'baseURL' => getenv('BASE_URL'),
+    ],
 
     /*
      * The following settings are *filesystem paths* which define where
@@ -130,7 +130,7 @@ $config = [
      * A possible way to generate a random salt is by running the following command from a unix shell:
      * LC_CTYPE=C tr -c -d '0123456789abcdefghijklmnopqrstuvwxyz' </dev/urandom | dd bs=32 count=1 2>/dev/null;echo
      */
-    'secretsalt' => 'defaultsecretsalt',
+    'secretsalt' => getenv('SIMPLESAML_SECRET_KEY'),
 
     /*
      * This password must be kept secret, and modified from the default value 123.
@@ -138,7 +138,7 @@ $config = [
      * metadata listing and diagnostics pages.
      * You can also put a hash here; run "bin/pwgen.php" to generate one.
      */
-    'auth.adminpassword' => '123',
+    'auth.adminpassword' => getenv('SIMPLESAML_ADMIN_PASSWORD'),
 
     /*
      * Set this options to true if you want to require administrator password to access the web interface
