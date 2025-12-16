@@ -209,7 +209,7 @@ $wgPluggableAuth_Config = [
         'data' => [
             'providerURL' => "https://login.microsoftonline.com/{$tenantID}/v2.0/",
             'clientID' => $clientID,
-            'clientsecret' => $clientSecret,
+            'clientSecret' => $clientSecret,
             'scope' => ['openid', 'email', 'profile'],
         ],
     ],
