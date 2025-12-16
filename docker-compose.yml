@@ -1,41 +1,39 @@
-
-version: '3'
 services:
   mediawiki:
-    privileged: true
-    image: ene-docker.iiasa.ac.at/mediawiki:1.35.2
+    build:
+      context: ./mediawiki
+      dockerfile: Dockerfile
     restart: always
     ports:
-      - 9000:80
-    links:
-      - database
+      - 8260:80
     environment:
-      DEBUG: 'true'
       WIKI_PATH: '/wiki'
-      BASE_URL: 'http://localhost:9000'
-      MEDIAWIKI_DATABASE_HOST: 'database'
-      MEDIAWIKI_DATABASE_USER: wikiuser
-      MEDIAWIKI_DATABASE_PASSWORD: example
-      MEDIAWIKI_DATABASE_NAME: mywiki
-      MEDIAWIKI_DATABASE_PREFIX: ‘wiki_’
+      BASE_URL: 'https://wiki.ece.iiasa.ac.at'
+      MEDIAWIKI_DATABASE_HOST: 'mysql8.iiasa.ac.at'
+      MEDIAWIKI_DATABASE_USER: 'ece'
+      # SECRET VALUES ARE IN KUBERNETIS SECRETS 
+      MEDIAWIKI_DATABASE_PASSWORD: '♪┏(・o･)┛♪'
+      MEDIAWIKI_DATABASE_NAME: 'ece_wiki'
+      MEDIAWIKI_DATABASE_PREFIX: 'wiki_'
 
-      OPENID_TENANT_ID: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX'
-      OPENID_CLIENT_ID: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX'
-      OPENID_CLIENT_SECRET: 'XXXXXXXXXXXXXXXXXXXXX'
+      
+      OPENID_TENANT_ID: '9b79b10b-0007-4e8a-b072-ad0c8cdc1aa5'
+      OPENID_CLIENT_ID: '66f8d9b1-5b47-4060-b89f-4d964074bbd6'
 
-      # WARNING: Test SK
-      MEDIAWIKI_SECRET_KEY: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-      MEDIAWIKI_UPGRADE_KEY: 'XXXXXXX'
+      # SECRET VALUES ARE IN KUBERNETIS SECRETS 
+      OPENID_CLIENT_SECRET: '〜⁠(⁠꒪⁠꒳⁠꒪⁠)⁠〜'
+
+      # SECRET VALUES ARE IN KUBERNETIS SECRETS 
+      MEDIAWIKI_SECRET_KEY: 'ᕙ( •̀ ᗜ •́ )ᕗ'
+
     volumes:
-      - /var/www/html/wiki/images
-  database:
-    image: mariadb
-    restart: always
-    environment:
-      # @see https://phabricator.wikimedia.org/source/mediawiki/browse/master/includes/DefaultSettings.php
-      MYSQL_DATABASE: mywiki
-      MYSQL_USER: wikiuser
-      MYSQL_PASSWORD: example
-      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
-    volumes:
-      - ./dbdata:/var/lib/mysql
+      - mediawiki_images:/var/www/html/wiki/images
+    networks:
+      - wiki-network
+
+networks:
+  wiki-network:
+    external: true
+
+volumes:
+  mediawiki_images:

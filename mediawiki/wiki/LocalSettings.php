@@ -172,7 +172,6 @@ wfLoadExtension('Gadgets');
 wfLoadExtension('ImageMap');
 wfLoadExtension('InputBox');
 wfLoadExtension('Interwiki');
-wfLoadExtension('LocalisationUpdate');
 wfLoadExtension('MultimediaViewer');
 wfLoadExtension('Nuke');
 wfLoadExtension('PageImages');
@@ -199,18 +198,27 @@ wfLoadExtension('OpenIDConnect');
 # End of automatically generated settings.
 # Add more configuration options below.
 
-$wgPluggableAuth_EnableLocalLogin = true;
-$wgPluggableAuth_ButtonLabel = 'Log in with your IIASA account';
-
 $tenantID = getenv("OPENID_TENANT_ID");
 $clientID = getenv("OPENID_CLIENT_ID");
 $clientSecret = getenv("OPENID_CLIENT_SECRET");
 
-$wgOpenIDConnect_Config["https://login.microsoftonline.com/{$tenantID}/v2.0/"] = [
-	'clientID' => $clientID,
-	'clientsecret' => $clientSecret,
-	'scope' => ['openid', 'email', 'profile']
+# New PluggableAuth 7.x configuration format for MediaWiki 1. 42
+$wgPluggableAuth_Config = [
+    'Log in with your IIASA account' => [
+        'plugin' => 'OpenIDConnect',
+        'data' => [
+            'providerURL' => "https://login.microsoftonline.com/{$tenantID}/v2.0/",
+            'clientID' => $clientID,
+            'clientsecret' => $clientSecret,
+            'scope' => ['openid', 'email', 'profile'],
+        ],
+    ],
 ];
+
+# Enable local login alongside SSO
+$wgPluggableAuth_EnableLocalLogin = true;
+
+# OpenIDConnect settings
 $wgOpenIDConnect_UseRealNameAsUserName = true;
 
 $wgShowExceptionDetails = getenv("DEBUG") == 'true';
