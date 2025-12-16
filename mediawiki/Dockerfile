@@ -1,4 +1,4 @@
-FROM mediawiki:1.42
+FROM mediawiki:1.43
 
 # Create log directories
 RUN mkdir -p /var/log/mediawiki /var/log/php && \
@@ -22,20 +22,26 @@ RUN apt-get update && apt-get install -y git unzip && rm -rf /var/lib/apt/lists/
 # Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Install extensions using git clone - REL1_42
-RUN git clone --depth 1 -b REL1_42 https://gerrit.wikimedia.org/r/mediawiki/extensions/PluggableAuth /var/www/html/wiki/extensions/PluggableAuth
+# Install extensions using git clone - REL1_43
+RUN git clone --depth 1 -b REL1_43 https://gerrit.wikimedia.org/r/mediawiki/extensions/PluggableAuth /var/www/html/wiki/extensions/PluggableAuth
 
-RUN git clone --depth 1 -b REL1_42 https://gerrit.wikimedia.org/r/mediawiki/extensions/OpenIDConnect /var/www/html/wiki/extensions/OpenIDConnect
+RUN git clone --depth 1 -b REL1_43 https://gerrit.wikimedia.org/r/mediawiki/extensions/OpenIDConnect /var/www/html/wiki/extensions/OpenIDConnect
 
-RUN git clone --depth 1 -b REL1_42 https://gerrit.wikimedia.org/r/mediawiki/extensions/intersection /var/www/html/wiki/extensions/intersection
+RUN git clone --depth 1 -b REL1_43 https://gerrit.wikimedia.org/r/mediawiki/extensions/intersection /var/www/html/wiki/extensions/intersection
 
-RUN git clone --depth 1 -b REL1_42 https://gerrit.wikimedia.org/r/mediawiki/extensions/Loops /var/www/html/wiki/extensions/Loops
+RUN git clone --depth 1 -b REL1_43 https://gerrit.wikimedia.org/r/mediawiki/extensions/Loops /var/www/html/wiki/extensions/Loops
 
-RUN git clone --depth 1 -b REL1_42 https://gerrit.wikimedia.org/r/mediawiki/extensions/Variables /var/www/html/wiki/extensions/Variables
+RUN git clone --depth 1 -b REL1_43 https://gerrit.wikimedia.org/r/mediawiki/extensions/Variables /var/www/html/wiki/extensions/Variables
 
-RUN git clone --depth 1 -b REL1_42 https://gerrit.wikimedia.org/r/mediawiki/extensions/UploadWizard /var/www/html/wiki/extensions/UploadWizard
+RUN git clone --depth 1 -b REL1_43 https://gerrit.wikimedia.org/r/mediawiki/extensions/UploadWizard /var/www/html/wiki/extensions/UploadWizard
 
-RUN git clone --depth 1 -b REL1_42 https://gerrit.wikimedia.org/r/mediawiki/extensions/Renameuser /var/www/html/wiki/extensions/Renameuser
+RUN git clone --depth 1 -b REL1_43 https://gerrit.wikimedia.org/r/mediawiki/extensions/Renameuser /var/www/html/wiki/extensions/Renameuser
+
+RUN git clone --depth 1 https://gerrit.wikimedia.org/r/mediawiki/extensions/AccessControl /var/www/html/wiki/extensions/AccessControl
+
+RUN cd /var/www/html/wiki/extensions/AccessControl/src && \
+    sed -i '835s/\$allow\[EDIT\]\[ \$user \] = true;/\$allow[EDIT][ \$user->getName() ] = true;/' AccessControlHooks.php && \
+    sed -i '837s/\$allow\[VIEW\]\[ \$user \] = true;/\$allow[VIEW][ \$user->getName() ] = true;/' AccessControlHooks.php
 
 RUN composer require jumbojett/openid-connect-php -d /var/www/html/wiki
 
@@ -44,7 +50,7 @@ COPY html/index.php /var/www/html/index.php
 COPY etc/apache2/conf-available/docker-php.conf /etc/apache2/conf-available/docker-php.conf
 COPY wiki/LocalSettings.php /var/www/html/wiki/LocalSettings.php
 COPY wiki/resources/assets/* /var/www/html/wiki/resources/assets/
-COPY wiki/skins/* /var/www/html/wiki/skins/
-COPY wiki/favicon.ico /var/www/html/wiki/
+COPY wiki/skins/* /var/www/html/wiki/skins
+COPY wiki/favicon.ico /var/www/html/wiki
 
 WORKDIR /var/www/html/wiki

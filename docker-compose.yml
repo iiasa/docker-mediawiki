@@ -1,38 +1,88 @@
-services:
+version: '3'
+services: 
+  dump-downloader: 
+    image:  mysql:8.0
+    volumes:
+      - ./db-dumps:/dumps
+    environment:
+      SOURCE_DB_HOST: '${SOURCE_DB_HOST}'
+      SOURCE_DB_USER: '${SOURCE_DB_USER}'
+      SOURCE_DB_PASSWORD: '${SOURCE_DB_PASSWORD}'
+      SOURCE_DB_NAME: '${SOURCE_DB_NAME}'
+    entrypoint: []
+    command: 
+      - bash
+      - -c
+      - |
+        set -e
+        mkdir -p /dumps
+        chmod 777 /dumps
+        echo "Starting database dump from $${SOURCE_DB_HOST}..."
+        mysqldump -h "$${SOURCE_DB_HOST}" -u "$${SOURCE_DB_USER}" -p"$${SOURCE_DB_PASSWORD}" --databases "$${SOURCE_DB_NAME}" --single-transaction --no-tablespaces --skip-lock-tables --quick --set-gtid-purged=OFF --column-statistics=0 --routines --triggers --events --result-file=/dumps/01-wiki-dump.sql
+        echo "Database dump completed successfully!"
+        ls -lh /dumps/
+
+    networks:
+      - wiki-network
+
   mediawiki:
     build:
       context: ./mediawiki
       dockerfile: Dockerfile
-    restart: always
+    restart:  always
     ports:
       - 9000:80
     environment:
-      WIKI_PATH: '/wiki'
-      BASE_URL: 'https://wiki.ece.iiasa.ac.at'
-      MEDIAWIKI_DATABASE_HOST: 'mysql8.iiasa.ac.at'
-      MEDIAWIKI_DATABASE_USER: 'ece'
-      # SECRET VALUES ARE IN KUBERNETIS SECRETS 
-      MEDIAWIKI_DATABASE_PASSWORD: '♪┏(・o･)┛♪'
-      MEDIAWIKI_DATABASE_NAME: 'ece_wiki'
+      WIKI_PATH:  '/wiki'
+      BASE_URL: 'http://localhost:9000'
+      MEDIAWIKI_DATABASE_HOST:  'database'
+      MEDIAWIKI_DATABASE_USER: '${SOURCE_DB_USER}'
+      MEDIAWIKI_DATABASE_PASSWORD: '${SOURCE_DB_PASSWORD}'
+      MEDIAWIKI_DATABASE_NAME: '${SOURCE_DB_NAME}'
       MEDIAWIKI_DATABASE_PREFIX: 'wiki_'
-
-      OPENID_TENANT_ID: '9b79b10b-0007-4e8a-b072-ad0c8cdc1aa5'
-      OPENID_CLIENT_ID: '66f8d9b1-5b47-4060-b89f-4d964074bbd6'
-
-      # SECRET VALUES ARE IN KUBERNETIS SECRETS 
-      OPENID_CLIENT_SECRET: '〜⁠(⁠꒪⁠꒳⁠꒪⁠)⁠〜'
-
-      # SECRET VALUES ARE IN KUBERNETIS SECRETS 
-      MEDIAWIKI_SECRET_KEY: 'ᕙ( •̀ ᗜ •́ )ᕗ'
-
-    volumes:
+      DEBUG: 'true'
+      
+      OPENID_TENANT_ID: '${OPENID_TENANT_ID}'
+      OPENID_CLIENT_ID: '${OPENID_CLIENT_ID}'
+      OPENID_CLIENT_SECRET: '${SOURCE_CLIENT_SECRET}'
+      MEDIAWIKI_SECRET_KEY: '${SOURCE_MEDIAWIKI_SECRET_KEY}'
+    volumes: 
       - mediawiki_images:/var/www/html/wiki/images
     networks:
       - wiki-network
+    depends_on:
+      - database
+
+  database:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: '${SOURCE_DB_NAME}'
+      MYSQL_USER: '${SOURCE_DB_USER}'
+      MYSQL_PASSWORD: '${SOURCE_DB_PASSWORD}'
+      MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db-dumps:/docker-entrypoint-initdb.d
+    networks:
+      - wiki-network
+    command: --default-authentication-plugin=mysql_native_password --max_allowed_packet=256M --innodb_buffer_pool_size=512M
+    depends_on:
+      dump-downloader: 
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout:  5s
+      retries:  10
+      start_period: 300s
 
 networks:
   wiki-network:
-    external: true
+    driver: bridge
 
 volumes:
   mediawiki_images:
+  db_data:

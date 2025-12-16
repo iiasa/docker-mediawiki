@@ -143,10 +143,29 @@ $wgRightsIcon = "";
 $wgDiff3 = "/usr/bin/diff3";
 
 # The following permissions were set based on your choice in the installer
-$wgGroupPermissions['*']['createaccount'] = false;
-$wgGroupPermissions['*']['autocreateaccount'] = true;
-$wgGroupPermissions['*']['edit'] = false;
 $wgGroupPermissions['*']['read'] = false;
+$wgGroupPermissions['*']['createaccount'] = false;
+$wgGroupPermissions['*']['edit'] = false;
+$wgGroupPermissions['*']['createpage'] = false;
+$wgGroupPermissions['*']['createtalk'] = false;
+$wgGroupPermissions['*']['autocreateaccount'] = true;
+$wgGroupPermissions['sysop']['createaccount'] = true;
+
+# Allow logged-in users to read
+$wgGroupPermissions['user']['read'] = true;
+
+$wgGroupPermissions['SceSeMembers']['read'] = true;
+$wgGroupPermissions['SceSeMembers']['write'] = true;
+
+# Prevent anonymous users from viewing any pages
+$wgWhitelistRead = [
+    'Special:UserLogin',
+    'Special:PluggableAuthLogin',
+    'MediaWiki:Common.css',
+    'MediaWiki:Vector.css',
+    'MediaWiki:Timeless.css',
+    '-',
+];
 
 ## Default skin: you can change the default skin. Use the internal symbolic
 ## names, ie 'vector', 'monobook':
@@ -186,6 +205,8 @@ wfLoadExtension('SyntaxHighlight_GeSHi');
 wfLoadExtension('TemplateData');
 wfLoadExtension('VisualEditor');
 wfLoadExtension('WikiEditor');
+wfLoadExtension('AccessControl');
+
 
 wfLoadExtension('UploadWizard');
 
@@ -202,7 +223,7 @@ $tenantID = getenv("OPENID_TENANT_ID");
 $clientID = getenv("OPENID_CLIENT_ID");
 $clientSecret = getenv("OPENID_CLIENT_SECRET");
 
-# New PluggableAuth 7.x configuration format for MediaWiki 1. 42
+# New PluggableAuth 7.x configuration format for MediaWiki 1.42
 $wgPluggableAuth_Config = [
     'Log in with your IIASA account' => [
         'plugin' => 'OpenIDConnect',
