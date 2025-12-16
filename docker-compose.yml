@@ -17,7 +17,6 @@ services:
       MEDIAWIKI_DATABASE_NAME: 'ece_wiki'
       MEDIAWIKI_DATABASE_PREFIX: 'wiki_'
 
-      
       OPENID_TENANT_ID: '9b79b10b-0007-4e8a-b072-ad0c8cdc1aa5'
       OPENID_CLIENT_ID: '66f8d9b1-5b47-4060-b89f-4d964074bbd6'
 
