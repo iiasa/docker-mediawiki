@@ -7,9 +7,8 @@ services:
     ports:
       - 9000:80
     environment:
-      DEBUG: 'true'
       WIKI_PATH: '/wiki'
-      BASE_URL: 'http://localhost:9000'
+      BASE_URL: 'https://wiki.ece.iiasa.ac.at'
       MEDIAWIKI_DATABASE_HOST: 'mysql8.iiasa.ac.at'
       MEDIAWIKI_DATABASE_USER: 'ece'
       # SECRET VALUES ARE IN KUBERNETIS SECRETS 
