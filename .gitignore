@@ -27,11 +27,12 @@
 
 .DS_Store
 .Idea
+.env
 coverage
 *.zip
 *.vscode
 
-/dbdata
+/db-dumps
 /images
 **/**/debug
 

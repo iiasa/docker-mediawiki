@@ -1,52 +1,56 @@
-FROM mediawiki:1.35.2
+FROM mediawiki:1.43
 
-RUN mkdir /var/log/mediawiki && \
-    mkdir /var/log/php && \
-    chown www-data:www-data /var/log/mediawiki && \
-    chown www-data:www-data /var/log/php
+# Create log directories
+RUN mkdir -p /var/log/mediawiki /var/log/php && \
+    chown www-data:www-data /var/log/mediawiki /var/log/php
 
+# Reorganize MediaWiki to /wiki subdirectory
 RUN mkdir /tmp/backup && \
     mv /var/www/html/* /tmp/backup && \
     mkdir /var/www/html/wiki && \
     mv /tmp/backup/* /var/www/html/wiki/ && \
-    mkdir /var/www/html/wiki/images/tmp 
+    rm -rf /tmp/backup && \
+    mkdir -p /var/www/html/wiki/images/tmp && \
+    chown -R www-data:www-data /var/www/html/wiki/images
 
-
-RUN chown -R www-data:www-data /var/www/html/wiki/images
-
+# Use production PHP configuration
 RUN cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini
 
-RUN php -r "copy('https://extdist.wmflabs.org/dist/extensions/PluggableAuth-REL1_35-d036ae0.tar.gz', 'PluggableAuth-REL1_35-d036ae0.tar.gz');" && \
-    tar -xzf PluggableAuth-REL1_35-d036ae0.tar.gz -C /var/www/html/wiki/extensions && \
-    rm -rf PluggableAuth-REL1_35-d036ae0.tar.gz
+# Install git and unzip for composer
+RUN apt-get update && apt-get install -y git unzip && rm -rf /var/lib/apt/lists/*
 
-RUN php -r "copy('https://extdist.wmflabs.org/dist/extensions/OpenIDConnect-REL1_35-19f4221.tar.gz', 'OpenIDConnect-REL1_35-19f4221.tar.gz');" && \
-    tar -xzf OpenIDConnect-REL1_35-19f4221.tar.gz -C /var/www/html/wiki/extensions && \
-    rm -rf OpenIDConnect-REL1_35-19f4221.tar.gz
+# Install composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-RUN php -r "copy('https://extdist.wmflabs.org/dist/extensions/intersection-REL1_35-1adb683.tar.gz', 'intersection-REL1_35-1adb683.tar.gz');" && \
-    tar -xzf intersection-REL1_35-1adb683.tar.gz -C /var/www/html/wiki/extensions && \
-    rm -rf intersection-REL1_35-1adb683.tar.gz
+# Install extensions using git clone - REL1_43
+RUN git clone --depth 1 -b REL1_43 https://gerrit.wikimedia.org/r/mediawiki/extensions/PluggableAuth /var/www/html/wiki/extensions/PluggableAuth
 
-RUN php -r "copy('https://extdist.wmflabs.org/dist/extensions/Loops-REL1_35-f0f1191.tar.gz', 'Loops-REL1_35-f0f1191.tar.gz');" && \
-    tar -xzf Loops-REL1_35-f0f1191.tar.gz -C /var/www/html/wiki/extensions && \
-    rm -rf /var/www/html/Loops-REL1_35-f0f1191.tar.gz
+RUN git clone --depth 1 -b REL1_43 https://gerrit.wikimedia.org/r/mediawiki/extensions/OpenIDConnect /var/www/html/wiki/extensions/OpenIDConnect
 
-RUN php -r "copy('https://extdist.wmflabs.org/dist/extensions/Variables-REL1_35-e20f4c7.tar.gz', 'Variables-REL1_35-e20f4c7.tar.gz');" && \
-    tar -xzf Variables-REL1_35-e20f4c7.tar.gz -C /var/www/html/wiki/extensions && \
-    rm -rf /var/www/html/Variables-REL1_35-e20f4c7.tar.gz
+RUN git clone --depth 1 -b REL1_43 https://gerrit.wikimedia.org/r/mediawiki/extensions/intersection /var/www/html/wiki/extensions/intersection
 
-RUN php -r "copy('https://extdist.wmflabs.org/dist/extensions/UploadWizard-REL1_35-c54e588.tar.gz', 'UploadWizard-REL1_35-c54e588.tar.gz');" && \
-    tar -xzf UploadWizard-REL1_35-c54e588.tar.gz -C /var/www/html/wiki/extensions && \
-    rm -rf /var/www/html/UploadWizard-REL1_35-c54e588.tar.gz
+RUN git clone --depth 1 -b REL1_43 https://gerrit.wikimedia.org/r/mediawiki/extensions/Loops /var/www/html/wiki/extensions/Loops
 
+RUN git clone --depth 1 -b REL1_43 https://gerrit.wikimedia.org/r/mediawiki/extensions/Variables /var/www/html/wiki/extensions/Variables
+
+RUN git clone --depth 1 -b REL1_43 https://gerrit.wikimedia.org/r/mediawiki/extensions/UploadWizard /var/www/html/wiki/extensions/UploadWizard
+
+RUN git clone --depth 1 -b REL1_43 https://gerrit.wikimedia.org/r/mediawiki/extensions/Renameuser /var/www/html/wiki/extensions/Renameuser
+
+RUN git clone --depth 1 https://gerrit.wikimedia.org/r/mediawiki/extensions/AccessControl /var/www/html/wiki/extensions/AccessControl
+
+RUN cd /var/www/html/wiki/extensions/AccessControl/src && \
+    sed -i '835s/\$allow\[EDIT\]\[ \$user \] = true;/\$allow[EDIT][ \$user->getName() ] = true;/' AccessControlHooks.php && \
+    sed -i '837s/\$allow\[VIEW\]\[ \$user \] = true;/\$allow[VIEW][ \$user->getName() ] = true;/' AccessControlHooks.php
+
+RUN composer require jumbojett/openid-connect-php -d /var/www/html/wiki
+
+# Copy custom configurations
 COPY html/index.php /var/www/html/index.php
-
 COPY etc/apache2/conf-available/docker-php.conf /etc/apache2/conf-available/docker-php.conf
-
 COPY wiki/LocalSettings.php /var/www/html/wiki/LocalSettings.php
 COPY wiki/resources/assets/* /var/www/html/wiki/resources/assets/
 COPY wiki/skins/* /var/www/html/wiki/skins
-COPY wiki/favicon.ico /var/www/html/wiki 
+COPY wiki/favicon.ico /var/www/html/wiki
 
 WORKDIR /var/www/html/wiki

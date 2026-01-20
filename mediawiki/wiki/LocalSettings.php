@@ -143,10 +143,29 @@ $wgRightsIcon = "";
 $wgDiff3 = "/usr/bin/diff3";
 
 # The following permissions were set based on your choice in the installer
-$wgGroupPermissions['*']['createaccount'] = false;
-$wgGroupPermissions['*']['autocreateaccount'] = true;
-$wgGroupPermissions['*']['edit'] = false;
 $wgGroupPermissions['*']['read'] = false;
+$wgGroupPermissions['*']['createaccount'] = false;
+$wgGroupPermissions['*']['edit'] = false;
+$wgGroupPermissions['*']['createpage'] = false;
+$wgGroupPermissions['*']['createtalk'] = false;
+$wgGroupPermissions['*']['autocreateaccount'] = true;
+$wgGroupPermissions['sysop']['createaccount'] = true;
+
+# Allow logged-in users to read
+$wgGroupPermissions['user']['read'] = true;
+
+$wgGroupPermissions['SceSeMembers']['read'] = true;
+$wgGroupPermissions['SceSeMembers']['write'] = true;
+
+# Prevent anonymous users from viewing any pages
+$wgWhitelistRead = [
+    'Special:UserLogin',
+    'Special:PluggableAuthLogin',
+    'MediaWiki:Common.css',
+    'MediaWiki:Vector.css',
+    'MediaWiki:Timeless.css',
+    '-',
+];
 
 ## Default skin: you can change the default skin. Use the internal symbolic
 ## names, ie 'vector', 'monobook':
@@ -172,7 +191,6 @@ wfLoadExtension('Gadgets');
 wfLoadExtension('ImageMap');
 wfLoadExtension('InputBox');
 wfLoadExtension('Interwiki');
-wfLoadExtension('LocalisationUpdate');
 wfLoadExtension('MultimediaViewer');
 wfLoadExtension('Nuke');
 wfLoadExtension('PageImages');
@@ -187,6 +205,8 @@ wfLoadExtension('SyntaxHighlight_GeSHi');
 wfLoadExtension('TemplateData');
 wfLoadExtension('VisualEditor');
 wfLoadExtension('WikiEditor');
+wfLoadExtension('AccessControl');
+
 
 wfLoadExtension('UploadWizard');
 
@@ -199,18 +219,27 @@ wfLoadExtension('OpenIDConnect');
 # End of automatically generated settings.
 # Add more configuration options below.
 
-$wgPluggableAuth_EnableLocalLogin = true;
-$wgPluggableAuth_ButtonLabel = 'Log in with your IIASA account';
-
 $tenantID = getenv("OPENID_TENANT_ID");
 $clientID = getenv("OPENID_CLIENT_ID");
 $clientSecret = getenv("OPENID_CLIENT_SECRET");
 
-$wgOpenIDConnect_Config["https://login.microsoftonline.com/{$tenantID}/v2.0/"] = [
-	'clientID' => $clientID,
-	'clientsecret' => $clientSecret,
-	'scope' => ['openid', 'email', 'profile']
+# New PluggableAuth 7.x configuration format for MediaWiki 1.42
+$wgPluggableAuth_Config = [
+    'Log in with your IIASA account' => [
+        'plugin' => 'OpenIDConnect',
+        'data' => [
+            'providerURL' => "https://login.microsoftonline.com/{$tenantID}/v2.0/",
+            'clientID' => $clientID,
+            'clientSecret' => $clientSecret,
+            'scope' => ['openid', 'email', 'profile'],
+        ],
+    ],
 ];
+
+# Enable local login alongside SSO
+$wgPluggableAuth_EnableLocalLogin = true;
+
+# OpenIDConnect settings
 $wgOpenIDConnect_UseRealNameAsUserName = true;
 
 $wgShowExceptionDetails = getenv("DEBUG") == 'true';
