@@ -1,3 +1,4 @@
-MEDIAWIKI_VERSION=1.35.2
+MEDIAWIKI_VERSION=1.43.11
+IMAGE=registry.iiasa.ac.at/ece-wiki/mediawiki
 
-docker build -t ene-docker.iiasa.ac.at/mediawiki:$MEDIAWIKI_VERSION . 
+docker build --pull -t $IMAGE:$MEDIAWIKI_VERSION -t $IMAGE:latest .
