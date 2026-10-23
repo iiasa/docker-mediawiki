@@ -1,7 +1,7 @@
-version: '3'
 services: 
   dump-downloader: 
     image:  mysql:8.0
+    network_mode: host
     volumes:
       - ./db-dumps:/dumps
     environment:
@@ -18,12 +18,10 @@ services:
         mkdir -p /dumps
         chmod 777 /dumps
         echo "Starting database dump from $${SOURCE_DB_HOST}..."
-        mysqldump -h "$${SOURCE_DB_HOST}" -u "$${SOURCE_DB_USER}" -p"$${SOURCE_DB_PASSWORD}" --databases "$${SOURCE_DB_NAME}" --single-transaction --no-tablespaces --skip-lock-tables --quick --set-gtid-purged=OFF --column-statistics=0 --routines --triggers --events --result-file=/dumps/01-wiki-dump.sql
+        # Remove --databases flag to avoid CREATE DATABASE conflicts
+        mysqldump -h "$${SOURCE_DB_HOST}" -u "$${SOURCE_DB_USER}" -p"$${SOURCE_DB_PASSWORD}" "$${SOURCE_DB_NAME}" --single-transaction --no-tablespaces --skip-lock-tables --quick --set-gtid-purged=OFF --column-statistics=0 --routines --triggers --events --result-file=/dumps/01-wiki-dump.sql
         echo "Database dump completed successfully!"
         ls -lh /dumps/
-
-    networks:
-      - wiki-network
 
   mediawiki:
     build:
@@ -77,7 +75,7 @@ services:
       interval: 10s
       timeout:  5s
       retries:  10
-      start_period: 300s
+      start_period: 500s
 
 networks:
   wiki-network:
